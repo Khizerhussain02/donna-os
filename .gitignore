@@ -1,0 +1,12 @@
+# Secrets — never commit real credentials (only matters if you add the
+# optional headless/autonomous mode later, which needs a database).
+.env
+.env.local
+.env.*.local
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+node_modules/
