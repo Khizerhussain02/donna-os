@@ -102,7 +102,19 @@ This is the part that separates "a demo" from "something that ran in production.
 
 ---
 
-## 7. Design notes & honest limitations
+## 7. Safety: read-only by design
+
+Donna OS **observes, audits, and reports — it does not change your code.** The specialists read the codebase, run read-only checks, and hand findings back; Donna synthesizes them; **a human decides and acts.** There is no path by which a hallucinated finding silently edits your repo.
+
+This is a deliberate choice, not a shortcoming. A read-only advisory layer is:
+- **Safe to adopt** — you can point it at a production codebase on day one without risk.
+- **Trustworthy** — the worst failure mode is a wrong *recommendation* (which the verifier exists to catch), never a wrong *action*.
+
+**Write access is the natural next step — and a deliberately gated one.** Letting the specialists apply fixes (open PRs, edit files, run migrations) would make the system dramatically more powerful. But that power is only worth granting once the read-only system has earned trust. The intended rollout is exactly that: **run read-only for a real stretch, prove the judgment and the verification hold up, *then* grant write access behind explicit guardrails** — never as the default.
+
+---
+
+## 8. Design notes & honest limitations
 
 Good architecture means knowing your system's edges. A few, stated plainly:
 

@@ -96,6 +96,7 @@ Each specialist is a self-contained `.claude/agents/*.md` file (its role, tools,
 | Interactive, works immediately | An always-on autonomous system (see roadmap) |
 | Fully editable — every behavior is a template | A black box |
 | Anti-confabulation by design (the verifier) | Guaranteed correct — it reduces, not eliminates, error |
+| **Read-only & safe** — it observes and reports | An autonomous code-editor (write access is a deliberately gated roadmap item) |
 
 ## Skills & credits
 
