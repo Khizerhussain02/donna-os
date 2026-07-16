@@ -98,11 +98,31 @@ Each specialist is a self-contained `.claude/agents/*.md` file (its role, tools,
 | Anti-confabulation by design (the verifier) | Guaranteed correct — it reduces, not eliminates, error |
 | **Read-only & safe** — it observes and reports | An autonomous code-editor (write access is a deliberately gated roadmap item) |
 
+## Inspiration & credit
+
+Donna OS is inspired by [**gstack**](https://github.com/garrytan/gstack) — [**Garry Tan**](https://github.com/garrytan)'s (President & CEO of Y Combinator) Claude Code skill pack, which put a beautifully simple idea into the world: stop using one AI as a solo developer, and give it a *role-based virtual team* instead.
+
+Donna OS takes that idea and builds an **orchestration layer** on top of it:
+
+- Where gstack gives you a set of role *skills* you invoke, Donna OS adds a **manager agent (Donna)** that decides *which* specialists a question needs and **dispatches them as parallel sub-agents** across iterative rounds.
+- It adds a **verifier** that checks each specialist's claims for confabulation before you see them, and a **synthesis** step that folds everything into one answer.
+- And it uses gstack's skills as the specialists' **power tools** — `senior-engineer`, `qa-lead`, `cso`, and others reach for gstack slash-commands to do their deep work.
+
+So: the *"virtual team"* idea is Garry Tan's; the *manager-dispatches-specialists-then-verifies-and-synthesizes* orchestration on top is what we built and tuned for our own use.
+
+## How we used it in production
+
+Donna OS wasn't a demo — it was a real validation gate for a real product. The pattern we ran, day in and day out:
+
+**After every push, Donna runs the full loop.** She dispatches the change to the specialists it actually needs — `senior-engineer` reviews the diff, `qa-lead` checks it genuinely works, `cso` looks for a security regression — they run **in parallel**, the `verifier` checks their claims for fabrication, and Donna comes back with **one green/red signal** before we trusted the change. A red from any specialist meant we looked again before moving on.
+
+That's the whole point of the [read-only design](docs/ARCHITECTURE.md#7-safety-read-only-by-design): a second — multi-agent — opinion on every change, at **zero marginal cost** (it runs on your existing Claude plan, not a metered API), that we could trust *precisely because* it couldn't touch the code — only report on it.
+
 ## Skills & credits
 
 Several specialists reach for **skills** — reusable procedures that live *outside* this repo and are installed globally in Claude Code. Donna OS **references** them by name; it does **not** bundle anyone else's code.
 
-- **gstack** — a third-party Claude Code skill pack, and the one Donna's team leans on most. `senior-engineer`, `qa-lead`, `cso`, `debugger`, `verifier`, and `performance-engineer` reach for gstack skills such as `/review`, `/qa`, `/cso`, `/investigate`, `/benchmark`, and `/canary`. **Install gstack for the specialists to reach full capability.** *(Add your install link here.)*
+- **[gstack](https://github.com/garrytan/gstack)** by Garry Tan — the skill pack Donna's team leans on most. `senior-engineer`, `qa-lead`, `cso`, `debugger`, `verifier`, and `performance-engineer` reach for gstack skills such as `/review`, `/qa`, `/cso`, `/investigate`, `/benchmark`, and `/canary`. **Install gstack for the specialists to reach full capability** — see [github.com/garrytan/gstack](https://github.com/garrytan/gstack).
 - **Official Anthropic skills** — a few agents use skills like `code-review`, `security-review`, and `document-generate` / `document-release`.
 
 **Without those packs installed, the affected specialists still run — they fall back to their own built-in reasoning** (a graceful degrade, not a crash). Donna's routing, the verify-then-synthesize loop, and every role's core judgment work with **zero external skills**.
