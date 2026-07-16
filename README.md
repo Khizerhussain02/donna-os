@@ -1,12 +1,19 @@
 # Agent Orchestration Engine
 
-**A manager-and-employees layer for Claude Code — one agent (Donna) that routes your request to a team of specialist agents, runs them in parallel, verifies their work, and hands you back a single answer.**
+**A manager-and-employees layer for Claude Code. One agent (Donna) routes your request to a team of specialist agents, runs them in parallel, verifies their work, and hands you back a single answer.**
 
-Most AI coding setups are one assistant doing everything. Real teams don't work that way — they have a manager who knows *who* to ask, specialists who go deep, and someone who double-checks the work before it ships. Agent Orchestration Engine is that structure, expressed as [Claude Code subagents](https://docs.claude.com/en/docs/claude-code/sub-agents).
+**▶ [Read the full case study](https://khizerhussain02.github.io/agent-orchestration-engine/)** for the story, the architecture, and a real episode where the verifier caught the team's own mistakes.
 
-You talk to **Donna**. Donna decides which **specialists** the question needs, dispatches them (in parallel when she can), and **synthesizes one coherent answer** — after a **verifier** has checked their claims for confabulation. You can add your own specialists by dropping in a file, and shape each one's behavior by editing a template.
+Most AI coding setups are one assistant doing everything. Real teams don't work that way. They have a manager who knows *who* to ask, specialists who go deep, and someone who double-checks the work before it ships. Agent Orchestration Engine is that structure, expressed as [Claude Code subagents](https://docs.claude.com/en/docs/claude-code/sub-agents).
 
-> ⚠️ **This is an opinionated starting point, not a finished product.** It ships the *interactive* framework — the part that works the moment you open Claude Code in this folder. The optional always-on/autonomous mode (a background watcher + web dashboard) is on the [roadmap](#roadmap), not in this repo yet.
+You talk to **Donna**. Donna decides which **specialists** the question needs, dispatches them (in parallel when she can), and **synthesizes one coherent answer**, after a **verifier** has checked their claims for confabulation. You can add your own specialists by dropping in a file, and shape each one's behavior by editing a template.
+
+<p align="center">
+  <img src="assets/console.png" alt="The console: a question goes in, senior-engineer, qa-lead and cso work in parallel, the verifier checks their claims, and Donna returns one synthesized answer with a clear recommendation" width="90%">
+</p>
+<p align="center"><em>One question in, one verified answer out. The specialists work, the verifier checks them, and Donna gives you the call.</em></p>
+
+> ⚠️ **This is an opinionated starting point, not a finished product.** It ships the *interactive* framework, the part that works the moment you open Claude Code in this folder. The optional always-on/autonomous mode (a background watcher and web dashboard) is on the [roadmap](#roadmap), not in this repo yet.
 
 ---
 
@@ -18,7 +25,7 @@ You talk to **Donna**. Donna decides which **specialists** the question needs, d
                                 ▼
                      ┌────────────────────┐
                      │       DONNA         │   the manager / router
-                     │  (only she can      │   — picks who to involve
+                     │  (only she can      │   · picks who to involve
                      │   dispatch others)  │
                      └─────────┬──────────┘
               ┌────────────────┼────────────────┐
@@ -48,18 +55,22 @@ You talk to **Donna**. Donna decides which **specialists** the question needs, d
 
 ## The team (18 agents)
 
-**Donna** — the manager. The only agent that can dispatch others; routes, orchestrates, and synthesizes.
+**Donna** is the manager. The only agent that can dispatch others; she routes, orchestrates, and synthesizes.
 
-**The specialists:**
+<p align="center">
+  <img src="assets/team.png" alt="All 18 agents: Donna the manager plus 17 specialists, each with its role and the skills it reaches for" width="100%">
+</p>
+
+**The specialists, in text:**
 
 | Engineering | Product & research | Ops & quality |
 |---|---|---|
-| `senior-engineer` — code review | `decision-analyzer` — decision briefs | `qa-lead` — does it actually work? |
-| `architect` — drift/design | `researcher` — cited web research | `verifier` — anti-confabulation |
-| `debugger` — root-cause (no fix w/o RCA) | `customer-signal-synth` — feedback→patterns | `cso` — security audit |
-| `data-engineer` — DB integrity (read-only) | `content-evaluator` — content quality | `performance-engineer` — web vitals |
-| `doc-syncer` — docs-vs-code drift | `progress-tracker` — activity data | `cost-watcher` — spend tracking |
-| | | `morning-briefer` / `eod-digester` — daily briefs |
+| `senior-engineer` · code review | `decision-analyzer` · decision briefs | `qa-lead` · does it actually work? |
+| `architect` · drift/design | `researcher` · cited web research | `verifier` · anti-confabulation |
+| `debugger` · root-cause (no fix w/o RCA) | `customer-signal-synth` · feedback→patterns | `cso` · security audit |
+| `data-engineer` · DB integrity (read-only) | `content-evaluator` · content quality | `performance-engineer` · web vitals |
+| `doc-syncer` · docs-vs-code drift | `progress-tracker` · activity data | `cost-watcher` · spend tracking |
+| | | `morning-briefer` / `eod-digester` · daily briefs |
 
 Each specialist is a self-contained `.claude/agents/*.md` file (its role, tools, and behavior) with its own append-only memory log.
 
@@ -94,52 +105,52 @@ Each specialist is a self-contained `.claude/agents/*.md` file (its role, tools,
 |---|---|
 | A drop-in multi-agent framework for Claude Code | A hosted product or a chatbot |
 | Interactive, works immediately | An always-on autonomous system (see roadmap) |
-| Fully editable — every behavior is a template | A black box |
-| Anti-confabulation by design (the verifier) | Guaranteed correct — it reduces, not eliminates, error |
-| **Read-only & safe** — it observes and reports | An autonomous code-editor (write access is a deliberately gated roadmap item) |
+| Fully editable, every behavior is a template | A black box |
+| Anti-confabulation by design (the verifier) | Guaranteed correct; it reduces, not eliminates, error |
+| **Read-only & safe**, it observes and reports | An autonomous code-editor (write access is a deliberately gated roadmap item) |
 
 ## Inspiration & credit
 
-Agent Orchestration Engine is inspired by [**gstack**](https://github.com/garrytan/gstack) — [**Garry Tan**](https://github.com/garrytan)'s (President & CEO of Y Combinator) Claude Code skill pack, which put a beautifully simple idea into the world: stop using one AI as a solo developer, and give it a *role-based virtual team* instead.
+Agent Orchestration Engine is inspired by [**gstack**](https://github.com/garrytan/gstack), [**Garry Tan**](https://github.com/garrytan)'s (President & CEO of Y Combinator) Claude Code skill pack, which put a beautifully simple idea into the world: stop using one AI as a solo developer, and give it a *role-based virtual team* instead.
 
 Agent Orchestration Engine takes that idea and builds an **orchestration layer** on top of it:
 
 - Where gstack gives you a set of role *skills* you invoke, Agent Orchestration Engine adds a **manager agent (Donna)** that decides *which* specialists a question needs and **dispatches them as parallel sub-agents** across iterative rounds.
 - It adds a **verifier** that checks each specialist's claims for confabulation before you see them, and a **synthesis** step that folds everything into one answer.
-- And it uses gstack's skills as the specialists' **power tools** — `senior-engineer`, `qa-lead`, `cso`, and others reach for gstack slash-commands to do their deep work.
+- And it uses gstack's skills as the specialists' **power tools**. `senior-engineer`, `qa-lead`, `cso`, and others reach for gstack slash-commands to do their deep work.
 
 So: the *"virtual team"* idea is Garry Tan's; the *manager-dispatches-specialists-then-verifies-and-synthesizes* orchestration on top is what we built and tuned for our own use.
 
 ## How we used it in production
 
-Agent Orchestration Engine wasn't a demo — it was a real validation gate for a real product. The pattern we ran, day in and day out:
+Agent Orchestration Engine wasn't a demo. It was a real validation gate for a real product. The pattern we ran, day in and day out:
 
-**After every push, Donna runs the full loop.** She dispatches the change to the specialists it actually needs — `senior-engineer` reviews the diff, `qa-lead` checks it genuinely works, `cso` looks for a security regression — they run **in parallel**, the `verifier` checks their claims for fabrication, and Donna comes back with **one green/red signal** before we trusted the change. A red from any specialist meant we looked again before moving on.
+**After every push, Donna runs the full loop.** She dispatches the change to the specialists it actually needs: `senior-engineer` reviews the diff, `qa-lead` checks it genuinely works, `cso` looks for a security regression. They run **in parallel**, the `verifier` checks their claims for fabrication, and Donna comes back with **one green/red signal** before we trusted the change. A red from any specialist meant we looked again before moving on.
 
-That's the whole point of the [read-only design](docs/ARCHITECTURE.md#7-safety-read-only-by-design): a second — multi-agent — opinion on every change, at **zero marginal cost** (it runs on your existing Claude plan, not a metered API), that we could trust *precisely because* it couldn't touch the code — only report on it.
+That's the whole point of the [read-only design](docs/ARCHITECTURE.md#7-safety-read-only-by-design): a second, multi-agent opinion on every change, at **zero marginal cost** (it runs on your existing Claude plan, not a metered API), that we could trust *precisely because* it couldn't touch the code, only report on it.
 
 ## Skills & credits
 
-Several specialists reach for **skills** — reusable procedures that live *outside* this repo and are installed globally in Claude Code. Agent Orchestration Engine **references** them by name; it does **not** bundle anyone else's code.
+Several specialists reach for **skills**, reusable procedures that live *outside* this repo and are installed globally in Claude Code. Agent Orchestration Engine **references** them by name; it does **not** bundle anyone else's code.
 
-- **[gstack](https://github.com/garrytan/gstack)** by Garry Tan — the skill pack Donna's team leans on most. `senior-engineer`, `qa-lead`, `cso`, `debugger`, `verifier`, and `performance-engineer` reach for gstack skills such as `/review`, `/qa`, `/cso`, `/investigate`, `/benchmark`, and `/canary`. **Install gstack for the specialists to reach full capability** — see [github.com/garrytan/gstack](https://github.com/garrytan/gstack).
-- **Official Anthropic skills** — a few agents use skills like `code-review`, `security-review`, and `document-generate` / `document-release`.
+- **[gstack](https://github.com/garrytan/gstack)** by Garry Tan, the skill pack Donna's team leans on most. `senior-engineer`, `qa-lead`, `cso`, `debugger`, `verifier`, and `performance-engineer` reach for gstack skills such as `/review`, `/qa`, `/cso`, `/investigate`, `/benchmark`, and `/canary`. **Install gstack for the specialists to reach full capability**, see [github.com/garrytan/gstack](https://github.com/garrytan/gstack).
+- **Official Anthropic skills.** A few agents use skills like `code-review`, `security-review`, and `document-generate` / `document-release`.
 
-**Without those packs installed, the affected specialists still run — they fall back to their own built-in reasoning** (a graceful degrade, not a crash). Donna's routing, the verify-then-synthesize loop, and every role's core judgment work with **zero external skills**.
+**Without those packs installed, the affected specialists still run; they fall back to their own built-in reasoning** (a graceful degrade, not a crash). Donna's routing, the verify-then-synthesize loop, and every role's core judgment work with **zero external skills**.
 
-> Think of it this way: the `.md` files here are the **team and their playbooks**. The external skill packs are the **power tools** they pick up — installed separately, like any developer's toolchain.
+> Think of it this way: the `.md` files here are the **team and their playbooks**. The external skill packs are the **power tools** they pick up, installed separately, like any developer's toolchain.
 
 ## Roadmap
 
-- [ ] Autonomous mode — a background watcher that runs Donna headlessly on a queue
+- [ ] Autonomous mode: a background watcher that runs Donna headlessly on a queue
 - [ ] Web dashboard for sessions, specialist calls, and memory
 - [ ] Cross-project shared memory
 - [ ] A specialist marketplace / starter packs
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).
 
 ---
 
-*Originally built by **Khizer Hussain** in 2025–2026 as the collaboration brain for a small human + AI team shipping a real product. Open-sourced here — generalized and scrubbed of all internal data, with the memory logs and context files shipped empty for you to make your own.*
+*Originally built by **Khizer Hussain** in 2025 and 2026 as the collaboration brain for a small human and AI team shipping a real product. Open-sourced here, generalized and scrubbed of all internal data, with the memory logs and context files shipped empty for you to make your own.*
