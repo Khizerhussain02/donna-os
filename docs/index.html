@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Donna OS · managing your AI like a team, not a tool</title>
+<meta name="description" content="A case study on Donna OS: a manager-and-specialists orchestration layer for Claude Code that ran as the validation layer for a real production product. Read-only by design, $0 marginal cost.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+<style>
+  :root{
+    --bg:#faf8f5; --panel:#ffffff; --ink:#1c1a1e; --ink-2:#3a363d; --muted:#6f6a73;
+    --line:#e7e2dc; --line-2:#efeae4; --accent:#5B3A5B; --accent-2:#8a5c8a; --accent-soft:#f0e8f0;
+    --ok:#2e7d54; --ok-soft:#e5f2ea; --warn:#a15c00; --warn-soft:#faf0dd; --bad:#b03535; --bad-soft:#f8e6e6;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+    --maxw:768px;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+       font-size:18px;line-height:1.65;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  h1,h2,h3{line-height:1.2;letter-spacing:-.02em;color:var(--ink)}
+  h2{font-size:28px;margin:60px 0 14px}
+  h3{font-size:20px;margin:34px 0 8px}
+  p{margin:16px 0}
+  strong{color:var(--ink);font-weight:650}
+  em{color:var(--ink-2)}
+  hr{border:0;border-top:1px solid var(--line);margin:40px 0}
+  code{font-family:var(--mono);font-size:.86em;background:var(--line-2);padding:.12em .4em;border-radius:5px}
+  .muted{color:var(--muted)} .small{font-size:15px}
+
+  .progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:50;
+            background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+
+  header.hero{position:relative;padding:76px 0 28px;border-bottom:1px solid var(--line);overflow:hidden}
+  .hero-grid{position:absolute;inset:0;z-index:0;opacity:.5;
+    background-image:linear-gradient(var(--line-2) 1px,transparent 1px),linear-gradient(90deg,var(--line-2) 1px,transparent 1px);
+    background-size:34px 34px;mask-image:radial-gradient(ellipse 80% 60% at 70% 0%,#000,transparent 75%);
+    -webkit-mask-image:radial-gradient(ellipse 80% 60% at 70% 0%,#000,transparent 75%)}
+  header.hero .wrap{position:relative;z-index:1}
+  .kicker{font-family:var(--mono);font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:0 0 18px}
+  header.hero h1{font-size:46px;margin:0 0 16px}
+  header.hero .lede{font-size:21px;color:var(--ink-2);margin:0 0 26px;line-height:1.5}
+  .links{display:flex;flex-wrap:wrap;gap:10px}
+  .btn{display:inline-flex;align-items:center;gap:7px;font-size:15px;font-weight:550;padding:9px 15px;
+       border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--ink);transition:transform .15s,border-color .15s}
+  .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .btn:hover{text-decoration:none;border-color:var(--accent);transform:translateY(-1px)}
+  .factbar{display:flex;flex-wrap:wrap;gap:22px;margin-top:32px;padding-top:22px;border-top:1px solid var(--line)}
+  .fact{min-width:120px}
+  .fact b{display:block;font-size:24px;letter-spacing:-.02em}
+  .fact span{font-size:13.5px;color:var(--muted)}
+
+  blockquote{margin:24px 0;padding:4px 0 4px 20px;border-left:3px solid var(--accent);color:var(--ink-2);font-size:18px}
+
+  figure.viz{margin:30px 0;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px 18px 14px}
+  figure.viz svg{width:100%;height:auto;display:block;overflow:visible}
+  figure.viz figcaption{font-size:13px;color:var(--muted);text-align:center;margin-top:12px}
+  .node rect{fill:var(--panel);stroke:var(--line);stroke-width:1.4}
+  .node.donna rect{fill:var(--accent);stroke:var(--accent)}
+  .node.donna text{fill:#fff}
+  .node.verify rect{fill:var(--accent-soft);stroke:var(--accent)}
+  .node.answer rect{fill:var(--ok-soft);stroke:var(--ok)}
+  .node text{font-family:var(--sans);font-size:15px;font-weight:600;fill:var(--ink);text-anchor:middle;dominant-baseline:middle}
+  .node .sub{font-size:11px;font-weight:500;fill:var(--muted)}
+  .node.donna .sub{fill:rgba(255,255,255,.82)}
+  .edge{fill:none;stroke:var(--accent-2);stroke-width:2;stroke-linecap:round;opacity:.85}
+  .edge.dim{stroke:var(--line);opacity:1}
+  .flowdot{fill:var(--accent)}
+  .stage rect{fill:var(--panel);stroke:var(--line);stroke-width:1.4}
+  .stage text{font-family:var(--sans);font-size:14px;font-weight:600;fill:var(--ink-2);text-anchor:middle;dominant-baseline:middle}
+  .stage.on rect{fill:var(--accent-soft);stroke:var(--accent)}
+  .stage.on text{fill:var(--accent)}
+  .looplabel{font-family:var(--mono);font-size:12px;fill:var(--muted);text-anchor:middle}
+
+  .console{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;margin:26px 0;box-shadow:0 6px 24px -18px rgba(0,0,0,.4)}
+  .console .bar{display:flex;align-items:center;gap:8px;padding:11px 16px;border-bottom:1px solid var(--line-2);font-size:13px;color:var(--muted)}
+  .dot{width:10px;height:10px;border-radius:50%;background:var(--line);display:inline-block}
+  .console .body{padding:18px}
+  .qrow{font-size:16px;color:var(--ink);margin:0 0 4px}.qrow .q{font-weight:600}
+  .status{font-family:var(--mono);font-size:12.5px;color:var(--muted);margin:2px 0 16px}
+  .chips{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:560px){.chips{grid-template-columns:1fr}}
+  .chip{border:1px solid var(--line);border-radius:11px;padding:11px 12px;background:var(--bg)}
+  .chip .top{display:flex;align-items:center;gap:8px;font-size:14px}
+  .chip .role{font-weight:650}
+  .rb{font-family:var(--mono);font-size:10.5px;padding:1px 5px;border-radius:5px;background:var(--accent-soft);color:var(--accent);letter-spacing:.02em}
+  .sd{width:8px;height:8px;border-radius:50%;margin-left:auto}
+  .sd.ok{background:var(--ok)} .sd.warn{background:var(--warn)} .sd.run{background:var(--accent)}
+  .chip .prev{font-size:13px;color:var(--muted);margin:6px 0 8px;line-height:1.45}
+  .pills{display:flex;flex-wrap:wrap;gap:5px}
+  .pill{font-family:var(--mono);font-size:10.5px;color:var(--ink-2);background:var(--line-2);padding:2px 6px;border-radius:5px}
+  .verdict{margin-top:14px;border:1px solid var(--line);border-radius:11px;overflow:hidden}
+  .verdict .vh{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 13px;background:var(--accent-soft);font-size:13px}
+  .verdict .vh b{color:var(--accent);font-family:var(--mono);font-size:12px;letter-spacing:.04em}
+  .tag{font-family:var(--mono);font-size:11px;padding:2px 7px;border-radius:20px}
+  .tag.ok{background:var(--ok-soft);color:var(--ok)} .tag.warn{background:var(--warn-soft);color:var(--warn)} .tag.bad{background:var(--bad-soft);color:var(--bad)}
+  .verdict ul{margin:10px 14px 12px;padding-left:18px;font-size:13.5px;color:var(--ink-2)} .verdict li{margin:5px 0}
+  .cap{font-size:13px;color:var(--muted);text-align:center;margin:-12px 0 26px}
+
+  .tablewrap{overflow-x:auto;margin:22px 0}
+  table{border-collapse:collapse;width:100%;font-size:14.5px}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:600}
+  td code{font-size:12.5px}
+
+  .note{background:var(--accent-soft);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:28px 0;font-size:16px;color:var(--ink-2)}
+  .note b{color:var(--ink)}
+
+  footer{border-top:1px solid var(--line);margin-top:64px;padding:34px 0 76px;color:var(--muted);font-size:15px}
+  footer a{color:var(--accent)}
+  ::selection{background:var(--accent);color:#fff}
+
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+
+<header class="hero">
+  <div class="hero-grid" aria-hidden="true"></div>
+  <div class="wrap">
+    <p class="kicker" data-hero>Case study · Multi-agent systems</p>
+    <h1 data-hero>Managing your AI like a team, not a tool</h1>
+    <p class="lede" data-hero>Donna OS turns Claude Code from one assistant doing everything into a small
+      organization: a manager who routes work, specialists who go deep, and a verifier that catches the
+      confident-but-wrong answer before you ever see it. It ran, across two months, as the validation layer
+      for a real production product.</p>
+    <div class="links" data-hero>
+      <a class="btn primary" href="https://github.com/Khizerhussain02/donna-os">View the repository →</a>
+      <a class="btn" href="https://github.com/Khizerhussain02/donna-os/blob/main/docs/ARCHITECTURE.md">Architecture deep-dive</a>
+      <a class="btn" href="https://www.linkedin.com/in/khizer-hussain/">LinkedIn</a>
+    </div>
+    <div class="factbar" data-hero>
+      <div class="fact"><b data-count="18">18</b><span>agents · 1 manager, 17 specialists</span></div>
+      <div class="fact"><b>2 months</b><span>in real production use</span></div>
+      <div class="fact"><b>$0</b><span>marginal API cost</span></div>
+      <div class="fact"><b>read-only</b><span>safe on production, day one</span></div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <h2 data-reveal>The problem I actually had</h2>
+  <p data-reveal>We were a small team shipping a real product, <a href="https://www.edlm.in/"><strong>EdLM</strong></a>,
+    an AI tutor for Indian K-12 students, heading into a live beta with a Chennai cohort. And a lot of our day-to-day
+    was repetitive: review this diff, check whether a task was really finished, sanity-check that a change didn't
+    quietly break something else. It was exactly the kind of work an AI can do, and I didn't want to pile it on the
+    people. I wanted to hand it to the AI, so the humans stayed on the hard parts.</p>
+  <p data-reveal>But when I reached for Claude Code's own multi-agent tools, I hit a wall. Ask a single assistant to
+    spin up sub-agents or run a loop, and each sub-agent starts <em>cold</em>. It doesn't carry the full context of
+    what we're building, what the task was, or what just changed. You get confident answers assembled from partial
+    pictures.</p>
+  <p data-reveal><strong>And nothing checked the work.</strong> Ask "is this auth change safe to ship?" and you get
+    one answer, in one voice, with no second opinion. When it was right, great. When it was subtly wrong, it sounded
+    exactly the same: it said it reviewed the file, it said it tested the flow. No one's job was to disagree, and no
+    one's job was to check whether the work claimed had actually been done.</p>
+  <p data-reveal>Real teams don't work like one brilliant generalist. They have a manager who knows <em>who</em> to ask,
+    specialists who go deep in their lane, and (the part everyone forgets) someone who double-checks the work before
+    it ships. I wanted that shape, for our AI.</p>
+
+  <h2 data-reveal>The idea</h2>
+  <p data-reveal>Stop treating the model as a solo developer. Treat it as an <strong>organization</strong>.</p>
+  <p data-reveal>You talk to one agent: <strong>Donna</strong>. Donna is the manager, the only agent allowed to dispatch
+    others. She reads your question, decides which specialists it actually needs, and sends them off, in parallel when
+    she can. Each specialist is its own agent with its own role, its own tools, and its own memory: a code reviewer,
+    a QA lead, a security officer, an architect, a researcher, a debugger, and a dozen more. When they report back, a
+    <strong>verifier</strong> checks their claims for fabrication. Then Donna folds everything into <em>one</em> answer.</p>
+
+  <figure class="viz" data-reveal>
+    <svg id="orch" viewBox="0 0 820 500" role="img" aria-label="Diagram: a question flows to Donna, who fans it out to specialists; their work converges through a verifier into one answer.">
+      <path class="edge dim e-you" d="M410,58 L410,106"/>
+      <path class="edge e-d1" d="M410,176 L119,240"/>
+      <path class="edge e-d2" d="M410,176 L313,240"/>
+      <path class="edge e-d3" d="M410,176 L507,240"/>
+      <path class="edge e-d4" d="M410,176 L701,240"/>
+      <path class="edge e-v1" d="M119,296 L410,352"/>
+      <path class="edge e-v2" d="M313,296 L410,352"/>
+      <path class="edge e-v3" d="M507,296 L410,352"/>
+      <path class="edge e-v4" d="M701,296 L410,352"/>
+      <path class="edge dim e-ans" d="M410,412 L410,444"/>
+      <circle class="flowdot" id="orbdot" r="5" cx="410" cy="58" opacity="0"/>
+      <g class="node you"><rect x="350" y="20" width="120" height="38" rx="9"/><text x="410" y="39">you ask</text></g>
+      <g class="node donna"><rect x="305" y="108" width="210" height="68" rx="12"/><text x="410" y="134">DONNA</text><text class="sub" x="410" y="156">manager · router · context-holder</text></g>
+      <g class="node"><rect x="44" y="240" width="150" height="56" rx="10"/><text x="119" y="262">senior-engineer</text><text class="sub" x="119" y="280">code review</text></g>
+      <g class="node"><rect x="238" y="240" width="150" height="56" rx="10"/><text x="313" y="262">qa-lead</text><text class="sub" x="313" y="280">does it work?</text></g>
+      <g class="node"><rect x="432" y="240" width="150" height="56" rx="10"/><text x="507" y="262">cso</text><text class="sub" x="507" y="280">security</text></g>
+      <g class="node"><rect x="626" y="240" width="150" height="56" rx="10"/><text x="701" y="262">+ 13 more</text><text class="sub" x="701" y="280">architect · debugger …</text></g>
+      <g class="node verify"><rect x="305" y="352" width="210" height="60" rx="12"/><text x="410" y="374">VERIFIER</text><text class="sub" x="410" y="394">verified · unverified · fabricated</text></g>
+      <g class="node answer"><rect x="320" y="444" width="180" height="40" rx="10"/><text x="410" y="464">one answer</text></g>
+    </svg>
+    <figcaption>Donna holds the full context and briefs each specialist, so no sub-agent starts cold.</figcaption>
+  </figure>
+
+  <p data-reveal>Two things make her more than a dispatcher. First, <strong>Donna holds the context.</strong> Because she
+    only ever reads, never writes, she can range freely across the whole codebase, the team hub, and the task tracker
+    to assemble the full picture, then hand each specialist exactly the slice it needs. The sub-agents stop starting
+    cold; the manager briefs them. That one move is what fixed the context problem that sent me down this path in the
+    first place.</p>
+  <p data-reveal>Second, it costs nothing at the margin. The whole thing runs <em>inside</em> Claude Code, on each person's
+    own subscription, with no API keys and no metered calls. Every teammate runs Donna on their own machine with their
+    own CLI. Adding a manager and seventeen specialists to the team added zero to the monthly bill.</p>
+
+  <h2 data-reveal>The loop</h2>
+  <p data-reveal>A single question doesn't just fan out once. It runs through rounds until the answer converges:</p>
+
+  <figure class="viz" data-reveal>
+    <svg id="loop" viewBox="0 0 820 220" role="img" aria-label="Diagram: decide, then dispatch specialists, then evaluate; loop back up to three rounds, then synthesize.">
+      <path class="edge dim" d="M150,150 L232,150"/>
+      <path class="edge dim" d="M388,150 L452,150"/>
+      <path class="edge dim" d="M608,150 L672,150"/>
+      <path class="edge" id="loopback" d="M530,124 C530,50 310,50 310,124"/>
+      <polygon class="flowdot" points="310,120 304,108 316,108"/>
+      <text class="looplabel" x="420" y="44">loop · ≤ 3 rounds</text>
+      <g class="stage" id="st1"><rect x="30" y="126" width="120" height="48" rx="10"/><text x="90" y="150">DECIDE</text></g>
+      <g class="stage" id="st2"><rect x="232" y="126" width="156" height="48" rx="10"/><text x="310" y="150">DISPATCH</text></g>
+      <g class="stage" id="st3"><rect x="452" y="126" width="156" height="48" rx="10"/><text x="530" y="150">EVALUATE</text></g>
+      <g class="stage" id="st4"><rect x="672" y="126" width="130" height="48" rx="10"/><text x="737" y="150">SYNTHESIZE</text></g>
+    </svg>
+    <figcaption>Between rounds: conflict? deeper question? vague finding? If so, re-dispatch. Otherwise, answer.</figcaption>
+  </figure>
+
+  <p data-reveal>The engine runs each specialist as its <strong>own operating-system process</strong> (<code>claude -p</code>),
+    so a round genuinely runs in parallel rather than one after another. Between rounds, an evaluate step asks the
+    questions a good manager asks: <em>do any two specialists contradict each other? did something surface a deeper
+    question? was a finding too vague to act on?</em> If so, it re-dispatches, carrying the previous round's findings
+    forward. A hard cap (three rounds) means it converges instead of spinning.</p>
+
+  <h2 data-reveal>The episode that justified the whole thing</h2>
+  <p data-reveal>Here is a real run, from the logs, dated <strong>29 May 2026</strong>: a pre-launch authentication and
+    security audit. I asked Donna a plain question, <em>is the login and auth layer safe to ship for the beta?</em>
+    She dispatched three specialists: the code reviewer (<code>senior-engineer</code>), the QA lead (<code>qa-lead</code>),
+    and the security officer (<code>cso</code>). Then the verifier checked all 17 of their claims.</p>
+
+  <div class="console" data-reveal role="img" aria-label="Recreation of the Donna console for the 29 May 2026 auth audit">
+    <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span>&nbsp;Donna · live session</div>
+    <div class="body">
+      <p class="qrow"><span class="q">“Is the login / auth layer safe to ship for the beta?”</span></p>
+      <p class="status">synthesized in 2 rounds · 3 specialists + verifier · high confidence</p>
+      <div class="chips">
+        <div class="chip" data-chip>
+          <div class="top"><span class="rb">R1</span><span class="role">senior-engineer</span><span class="sd ok"></span></div>
+          <p class="prev">Flagged a soft-delete login bypass and a missing route guard, with file:line evidence.</p>
+          <div class="pills"><span class="pill">/review</span><span class="pill">read</span><span class="pill">grep</span></div>
+        </div>
+        <div class="chip" data-chip>
+          <div class="top"><span class="rb">R1</span><span class="role">qa-lead</span><span class="sd ok"></span></div>
+          <p class="prev">Independently reproduced the same two issues from the user's side.</p>
+          <div class="pills"><span class="pill">/qa</span><span class="pill">read</span></div>
+        </div>
+        <div class="chip" data-chip>
+          <div class="top"><span class="rb">R1</span><span class="role">cso</span><span class="sd warn"></span></div>
+          <p class="prev">Same two P0s, plus a third the others missed: an account-resurrection vector in the reset flow.</p>
+          <div class="pills"><span class="pill">/cso</span><span class="pill">read</span><span class="pill">grep</span></div>
+        </div>
+        <div class="chip" data-chip>
+          <div class="top"><span class="rb">R2</span><span class="role">verifier</span><span class="sd run"></span></div>
+          <p class="prev">Re-checked all 17 claims against the actual tool-call traces.</p>
+          <div class="pills"><span class="pill">trace-audit</span><span class="pill">read</span></div>
+        </div>
+      </div>
+      <div class="verdict" data-chip>
+        <div class="vh"><b>VERIFIER VERDICT</b>
+          <span class="tag ok">17 checked</span><span class="tag warn">3 inaccuracies caught</span><span class="tag bad">0 fabricated</span></div>
+        <ul>
+          <li><strong>Over-coverage:</strong> qa-lead claimed to cover every caller of a temp-password helper, but missed one of three. Flagged.</li>
+          <li><strong>Cited-wrong-line:</strong> senior-engineer labeled a code range as the student path; the line was actually the tutor path. Corrected.</li>
+          <li><strong>Bad math:</strong> a bias figure was reported as roughly 14%; the real ratio was 25%. Corrected before it reached the answer.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <p class="cap">The console, recreated. Nothing here is a mockup of behavior; it's the shape of a real logged session.</p>
+
+  <p data-reveal>Look at what happened, because every part of the thesis is in this one run:</p>
+  <ul>
+    <li data-reveal><strong>Consensus made the real bugs trustworthy.</strong> Three specialists, working independently,
+      converged on the <em>same two</em> critical issues with the same file-and-line evidence. When three separate
+      agents point at the same line, you stop wondering if it's a hallucination. Both were found and fixed before launch.</li>
+    <li data-reveal><strong>Diversity caught what consensus couldn't.</strong> The security officer found a third issue, an
+      account-resurrection vector, that neither of the other two surfaced. One generalist assistant would never have
+      produced that angle. A specialist looking <em>only</em> for security did.</li>
+    <li data-reveal><strong>The verifier caught the specialists themselves.</strong> This is the part that matters most. The
+      verifier didn't just trust the reports. It re-read the tool-call traces and caught three real inaccuracies in the
+      specialists' <em>own</em> claims. Not product bugs, but bugs in what the agents said they did. That's the difference
+      between a system that sounds authoritative and one you can actually trust.</li>
+  </ul>
+
+  <h2 data-reveal>The verifier is the whole point</h2>
+  <p data-reveal>Multi-agent systems have a dangerous property: they <em>amplify</em> hallucination. One agent's confident guess
+    becomes another agent's input, and the error compounds with each hop. If you're going to run a team of AIs, the
+    single most important thing you can build is the thing that pushes back.</p>
+  <p data-reveal>So the verifier is a dedicated agent whose only job is to catch fabrication before it reaches you. It doesn't
+    take a specialist's word for anything. It re-runs an independent check, and it reads the trace: if a specialist
+    <em>says</em> "I reviewed 8 files" but the trace shows 3 reads, that's flagged. If it <em>says</em> "tested on mobile"
+    but only desktop calls appear, that's flagged too. Every claim comes back tagged <code>VERIFIED</code>,
+    <code>UNVERIFIED</code>, or <code>FABRICATED</code>.</p>
+  <p data-reveal>Over time the verifier built up a taxonomy of the ways an AI specialist bluffs, so the manager can tighten the
+    prompts that produce each one:</p>
+  <div class="tablewrap" data-reveal><table>
+    <thead><tr><th>Fabrication type</th><th>What it looks like</th><th>Counter-measure</th></tr></thead>
+    <tbody>
+      <tr><td><b>Over-coverage</b></td><td>Claims to have reviewed N files, actually read fewer</td><td>Force "list every file you read" in the output</td></tr>
+      <tr><td><b>Phantom-tool</b></td><td>Claims a tool call that never appears in the trace</td><td>Require trace inspection before claiming success</td></tr>
+      <tr><td><b>Viewport-invention</b></td><td>Claims mobile or tablet testing with no viewport call</td><td>Require a screenshot per viewport</td></tr>
+      <tr><td><b>Cited-wrong-line</b></td><td>Cites <code>file:line</code>, but the line doesn't say that</td><td>Re-read the cited line; mismatch means fabricated</td></tr>
+      <tr><td><b>Vague-evidence</b></td><td>"There appears to be a bug" with no location</td><td>Mark UNVERIFIED, ask for specifics</td></tr>
+      <tr><td><b>Phantom-finding</b></td><td>Reports a bug that doesn't reproduce</td><td>Require reproduction steps</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 data-reveal>Read-only by design</h2>
+  <p data-reveal>Here is a deliberate decision that people expect to be a limitation and is actually the point:
+    <strong>Donna OS observes, audits, and reports. It does not change your code.</strong> The specialists read the
+    codebase, run read-only checks, and hand findings back. Donna synthesizes. A human decides and acts. There is no path
+    by which a hallucinated finding silently edits your repository.</p>
+  <p data-reveal>That makes it <strong>safe to point at a production codebase on day one</strong>. The worst thing that can
+    happen is a wrong <em>recommendation</em> (which the verifier is built to catch), never a wrong <em>action</em>.
+    Write access, letting the specialists open PRs, edit files, and run migrations, is the obvious next step, and it
+    would make the system dramatically more powerful. But that power is only worth granting once the read-only system
+    has earned trust. The intended path is exactly that: run read-only for a real stretch, prove the judgment and the
+    verification hold up, <em>then</em> grant write access behind explicit guardrails, never as the default.</p>
+
+  <h2 data-reveal>Built for production, not for a demo</h2>
+  <p data-reveal>The gap between "a cool multi-agent script" and "something you rely on for two months" is almost entirely
+    reliability engineering. The orchestrator is defensively built:</p>
+  <div class="tablewrap" data-reveal><table>
+    <thead><tr><th>What goes wrong</th><th>What the system does</th></tr></thead>
+    <tbody>
+      <tr><td>The process crashes mid-run</td><td>On restart, the run is reconstructed from the database and <b>synthesized from partial work</b>, not re-run from scratch</td></tr>
+      <tr><td>The watcher itself dies</td><td>A supervisor restarts it with <b>exponential backoff</b> (5s → 15s → 30s → 60s), resetting once it's healthy</td></tr>
+      <tr><td>A timed-out agent leaves a zombie process</td><td>Timeouts trigger a <b>process-tree kill</b>, which fixes a real bug where a killed shell left the agent alive to overwrite results</td></tr>
+      <tr><td>Rate limits</td><td>Detected and retried with backoff (15s → 45s → 90s)</td></tr>
+      <tr><td>Runaway cost</td><td>Hard caps on rounds, specialists, wall-clock, and tokens, checked before <em>and</em> after each round</td></tr>
+      <tr><td>Two people trigger the same run</td><td><b>Atomic job-claiming</b>: exactly one worker owns a session, and a completed run can't be clobbered by a late worker</td></tr>
+      <tr><td>A missing dependency</td><td><b>Fail-open</b> everywhere. An unreadable directory, an unreachable log endpoint, a repo it couldn't clone: each degrades gracefully instead of failing the run</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2 data-reveal>How the team actually uses it</h2>
+  <p data-reveal>This stopped being a clever trick and became the way we <em>close work</em>. Our developers push code (which
+    also lives in the team hub) and update a shared task tracker. When a teammate marks a task done, that's Donna's cue.</p>
+  <p data-reveal>She reads the tracker to know what the task <em>actually</em> was in the first place, then judges the three things
+    a good lead would:</p>
+  <ul>
+    <li data-reveal><strong>Is the work on track:</strong> does the change match what the task actually asked for?</li>
+    <li data-reveal><strong>Is "done" really done,</strong> or does the code say something different from what the teammate says?</li>
+    <li data-reveal><strong>Did it break anything else:</strong> what does this change touch that nobody mentioned?</li>
+  </ul>
+  <p data-reveal>To answer those, she calls the right specialists with the right skills, has her back-and-forth with each of them,
+    and verifies thoroughly. Out comes one report. A <strong>green</strong> report closes the task and the team moves to the
+    next; a <strong>red</strong> one sends it back with specifics. Task after task, that's the loop: a second set of eyes on
+    every piece of work that never gets tired and never rubber-stamps.</p>
+
+  <h2 data-reveal>It runs alone, and it's stronger wired in</h2>
+  <p data-reveal>Donna OS works standalone: drop the agent definitions into any project, open Claude Code, and ask Donna a
+    question. But it was built as one piece of a larger system, a shared team hub (git for content, a database for state)
+    that both humans and AIs read from and write to. Given the right credentials, Donna plugs into that hub and gains three
+    things:</p>
+  <ul>
+    <li data-reveal><strong>A live console.</strong> You watch a run happen: the response card moving through <em>choosing
+      specialists</em>, <em>working (2/4)</em>, <em>writing your answer</em>, each specialist a chip you can click to stream
+      its thinking and tool calls in real time.</li>
+    <li data-reveal><strong>End-to-end observability.</strong> Every session, specialist call, and event is persisted, so any run
+      can be replayed or audited after the fact. It isn't a black box.</li>
+    <li data-reveal><strong>Durable memory.</strong> Each specialist reads "what I learned last time" before it acts and appends a
+      lesson after. The verifier's fabrication taxonomy above wasn't designed up front; it <em>accumulated</em>, run by run,
+      in exactly this way.</li>
+  </ul>
+
+  <h2 data-reveal>Where the honesty is</h2>
+  <p data-reveal>Good architecture means knowing your system's edges. Two, stated plainly:</p>
+  <p data-reveal><strong>Conflict handling is <em>triggered</em>, not <em>adjudicated</em>.</strong> The engine detects contradictions
+    and re-dispatches to reconcile them, and the verifier catches fabrication, but there is no formal tie-break for two
+    <em>honest-but-opposed</em> conclusions. When both specialists genuinely did the work and still disagree, the system
+    surfaces the disagreement, with a confidence level, rather than mechanically declaring a winner. Formalizing that
+    adjudication is the clearest next step.</p>
+  <p data-reveal><strong>The judgment is model-driven; the machinery is code.</strong> The loop, the rounds, the re-dispatch, the caps,
+    and every piece of the reliability scaffolding are deterministic code. The <em>decisions</em> (who to call, is this a
+    contradiction, is another round worth it) are delegated to model steps. That's a deliberate trade: flexible routing, at
+    the cost of non-determinism, bounded by hard caps and a default of "stop and answer" whenever a model step returns
+    something unparseable.</p>
+  <p data-reveal>I'd rather tell you where it ends than pretend it doesn't.</p>
+
+  <h2 data-reveal>Credit</h2>
+  <p data-reveal>The seed of this idea isn't mine. It's <a href="https://github.com/garrytan/gstack">gstack</a>, <strong>Garry Tan</strong>'s
+    (President &amp; CEO of Y Combinator) Claude Code skill pack, which put a beautifully simple thought into the world: stop
+    using one AI as a solo developer, and give it a role-based virtual team instead. Donna OS takes that idea and builds the
+    orchestration layer on top: the manager that dispatches specialists in parallel, the verifier that checks them, and the
+    loop that converges. It uses gstack's skills as the specialists' power tools. The "virtual team" idea is Garry Tan's; the
+    manager-dispatches-then-verifies-then-synthesizes machinery is what I built and tuned for real use.</p>
+
+  <div class="note" data-reveal><b>The one-line version:</b> most AI setups are one assistant doing everything. Donna OS is a
+    manager, a team of specialists, and a verifier that refuses to take their word for it. Read-only, at zero marginal cost,
+    proven against a real product before I'd trust it with anything.</div>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Built by <strong>Khizer Hussain</strong> in 2025 and 2026, as the collaboration brain for a small human-and-AI team
+      shipping <a href="https://www.edlm.in/">EdLM</a>. Open-sourced, generalized and scrubbed of all internal data.</p>
+    <p class="small">
+      <a href="https://github.com/Khizerhussain02/donna-os">GitHub · the repository</a> ·
+      <a href="https://github.com/Khizerhussain02/donna-os/blob/main/docs/ARCHITECTURE.md">Architecture deep-dive</a> ·
+      <a href="https://www.linkedin.com/in/khizer-hussain/">LinkedIn</a>
+    </p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var bar = document.getElementById('progress');
+  function onScroll(){
+    var h = document.documentElement, max = h.scrollHeight - h.clientHeight;
+    bar.style.width = (max > 0 ? (h.scrollTop/max*100) : 0) + '%';
+  }
+  document.addEventListener('scroll', onScroll, {passive:true}); onScroll();
+
+  function start(){
+    if (reduce || !window.gsap || !window.ScrollTrigger){ return; }
+    var gsap = window.gsap; gsap.registerPlugin(window.ScrollTrigger);
+
+    gsap.from('[data-hero]', {y:22, opacity:0, duration:.7, ease:'power3.out', stagger:.09});
+
+    document.querySelectorAll('[data-count]').forEach(function(el){
+      var end = +el.getAttribute('data-count'); var o = {v:0};
+      gsap.to(o, {v:end, duration:1.2, ease:'power2.out', delay:.5,
+        onUpdate:function(){ el.textContent = Math.round(o.v); }});
+    });
+
+    gsap.utils.toArray('[data-reveal]').forEach(function(el){
+      gsap.from(el, {y:26, opacity:0, duration:.6, ease:'power2.out',
+        scrollTrigger:{trigger:el, start:'top 88%'}});
+    });
+
+    gsap.from('[data-chip]', {y:16, opacity:0, duration:.5, ease:'power2.out', stagger:.14,
+      scrollTrigger:{trigger:'.console', start:'top 74%'}});
+
+    (function(){
+      var svg = document.getElementById('orch'); if(!svg) return;
+      var edges = svg.querySelectorAll('.edge');
+      edges.forEach(function(p){ var L=p.getTotalLength(); p.style.strokeDasharray=L; p.style.strokeDashoffset=L; });
+      var nodes = svg.querySelectorAll('.node');
+      gsap.set(nodes, {opacity:0, transformOrigin:'center', scale:.8});
+      var dot = document.getElementById('orbdot');
+      var tl = gsap.timeline({scrollTrigger:{trigger:svg, start:'top 72%'}});
+      tl.to(svg.querySelector('.you'), {opacity:1, scale:1, duration:.4, ease:'back.out(1.6)'})
+        .to(dot, {opacity:1, duration:.15}, '<')
+        .to(dot, {attr:{cy:106}, duration:.35, ease:'power1.in'})
+        .to(svg.querySelector('.e-you'), {strokeDashoffset:0, duration:.3}, '<')
+        .to(svg.querySelector('.donna'), {opacity:1, scale:1, duration:.45, ease:'back.out(1.6)'})
+        .to(dot, {opacity:0, duration:.15})
+        .to(['.e-d1','.e-d2','.e-d3','.e-d4'].map(function(c){return svg.querySelector(c);}),
+            {strokeDashoffset:0, duration:.45, stagger:.06}, '-=.1')
+        .to([nodes[2],nodes[3],nodes[4],nodes[5]], {opacity:1, scale:1, duration:.4, ease:'back.out(1.5)', stagger:.06}, '-=.35')
+        .to(['.e-v1','.e-v2','.e-v3','.e-v4'].map(function(c){return svg.querySelector(c);}),
+            {strokeDashoffset:0, duration:.45, stagger:.06})
+        .to(svg.querySelector('.verify'), {opacity:1, scale:1, duration:.45, ease:'back.out(1.6)'}, '-=.2')
+        .to(svg.querySelector('.e-ans'), {strokeDashoffset:0, duration:.3})
+        .to(svg.querySelector('.answer'), {opacity:1, scale:1, duration:.4, ease:'back.out(1.7)'});
+    })();
+
+    (function(){
+      var svg = document.getElementById('loop'); if(!svg) return;
+      var lb = document.getElementById('loopback');
+      if(lb){ var L=lb.getTotalLength(); lb.style.strokeDasharray=L; lb.style.strokeDashoffset=L; }
+      var stages = ['#st1','#st2','#st3','#st4'].map(function(s){return svg.querySelector(s);});
+      var tl = gsap.timeline({repeat:-1, repeatDelay:.6,
+        scrollTrigger:{trigger:svg, start:'top 78%'}});
+      function light(i,hold){ tl.call(function(){ stages.forEach(function(s,j){ s.classList.toggle('on', j===i); }); }).to({},{duration:hold||.55}); }
+      light(0); light(1); light(2);
+      tl.to(lb, {strokeDashoffset:0, duration:.5, ease:'power1.inOut'});
+      light(1); light(2);
+      tl.set(lb, {strokeDashoffset:lb?lb.getTotalLength():0});
+      light(3, .8);
+      tl.call(function(){ stages.forEach(function(s){ s.classList.remove('on'); }); }).to({},{duration:.3});
+    })();
+  }
+
+  if (document.readyState === 'complete') start();
+  else window.addEventListener('load', start);
+})();
+</script>
+</body>
+</html>
