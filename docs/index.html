@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Donna OS · managing your AI like a team, not a tool</title>
-<meta name="description" content="A case study on Donna OS: a manager-and-specialists orchestration layer for Claude Code that ran as the validation layer for a real production product. Read-only by design, $0 marginal cost.">
+<title>Agent Orchestration Engine · managing your AI like a team, not a tool</title>
+<meta name="description" content="A case study on Agent Orchestration Engine: a manager-and-specialists orchestration layer for Claude Code that ran as the validation layer for a real production product. Read-only by design, $0 marginal cost.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
@@ -127,13 +127,13 @@
   <div class="wrap">
     <p class="kicker" data-hero>Case study · Multi-agent systems</p>
     <h1 data-hero>Managing your AI like a team, not a tool</h1>
-    <p class="lede" data-hero>Donna OS turns Claude Code from one assistant doing everything into a small
+    <p class="lede" data-hero>Agent Orchestration Engine turns Claude Code from one assistant doing everything into a small
       organization: a manager who routes work, specialists who go deep, and a verifier that catches the
       confident-but-wrong answer before you ever see it. It ran, across two months, as the validation layer
       for a real production product.</p>
     <div class="links" data-hero>
-      <a class="btn primary" href="https://github.com/Khizerhussain02/donna-os">View the repository →</a>
-      <a class="btn" href="https://github.com/Khizerhussain02/donna-os/blob/main/docs/ARCHITECTURE.md">Architecture deep-dive</a>
+      <a class="btn primary" href="https://github.com/Khizerhussain02/agent-orchestration-engine">View the repository →</a>
+      <a class="btn" href="https://github.com/Khizerhussain02/agent-orchestration-engine/blob/main/docs/ARCHITECTURE.md">Architecture deep-dive</a>
       <a class="btn" href="https://www.linkedin.com/in/khizer-hussain/">LinkedIn</a>
     </div>
     <div class="factbar" data-hero>
@@ -317,7 +317,7 @@
 
   <h2 data-reveal>Read-only by design</h2>
   <p data-reveal>Here is a deliberate decision that people expect to be a limitation and is actually the point:
-    <strong>Donna OS observes, audits, and reports. It does not change your code.</strong> The specialists read the
+    <strong>Agent Orchestration Engine observes, audits, and reports. It does not change your code.</strong> The specialists read the
     codebase, run read-only checks, and hand findings back. Donna synthesizes. A human decides and acts. There is no path
     by which a hallucinated finding silently edits your repository.</p>
   <p data-reveal>That makes it <strong>safe to point at a production codebase on day one</strong>. The worst thing that can
@@ -359,7 +359,7 @@
     every piece of work that never gets tired and never rubber-stamps.</p>
 
   <h2 data-reveal>It runs alone, and it's stronger wired in</h2>
-  <p data-reveal>Donna OS works standalone: drop the agent definitions into any project, open Claude Code, and ask Donna a
+  <p data-reveal>Agent Orchestration Engine works standalone: drop the agent definitions into any project, open Claude Code, and ask Donna a
     question. But it was built as one piece of a larger system, a shared team hub (git for content, a database for state)
     that both humans and AIs read from and write to. Given the right credentials, Donna plugs into that hub and gains three
     things:</p>
@@ -391,12 +391,12 @@
   <h2 data-reveal>Credit</h2>
   <p data-reveal>The seed of this idea isn't mine. It's <a href="https://github.com/garrytan/gstack">gstack</a>, <strong>Garry Tan</strong>'s
     (President &amp; CEO of Y Combinator) Claude Code skill pack, which put a beautifully simple thought into the world: stop
-    using one AI as a solo developer, and give it a role-based virtual team instead. Donna OS takes that idea and builds the
+    using one AI as a solo developer, and give it a role-based virtual team instead. Agent Orchestration Engine takes that idea and builds the
     orchestration layer on top: the manager that dispatches specialists in parallel, the verifier that checks them, and the
     loop that converges. It uses gstack's skills as the specialists' power tools. The "virtual team" idea is Garry Tan's; the
     manager-dispatches-then-verifies-then-synthesizes machinery is what I built and tuned for real use.</p>
 
-  <div class="note" data-reveal><b>The one-line version:</b> most AI setups are one assistant doing everything. Donna OS is a
+  <div class="note" data-reveal><b>The one-line version:</b> most AI setups are one assistant doing everything. Agent Orchestration Engine is a
     manager, a team of specialists, and a verifier that refuses to take their word for it. Read-only, at zero marginal cost,
     proven against a real product before I'd trust it with anything.</div>
 
@@ -407,8 +407,8 @@
     <p>Built by <strong>Khizer Hussain</strong> in 2025 and 2026, as the collaboration brain for a small human-and-AI team
       shipping <a href="https://www.edlm.in/">EdLM</a>. Open-sourced, generalized and scrubbed of all internal data.</p>
     <p class="small">
-      <a href="https://github.com/Khizerhussain02/donna-os">GitHub · the repository</a> ·
-      <a href="https://github.com/Khizerhussain02/donna-os/blob/main/docs/ARCHITECTURE.md">Architecture deep-dive</a> ·
+      <a href="https://github.com/Khizerhussain02/agent-orchestration-engine">GitHub · the repository</a> ·
+      <a href="https://github.com/Khizerhussain02/agent-orchestration-engine/blob/main/docs/ARCHITECTURE.md">Architecture deep-dive</a> ·
       <a href="https://www.linkedin.com/in/khizer-hussain/">LinkedIn</a>
     </p>
   </div>

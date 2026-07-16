@@ -66,7 +66,7 @@ These are tunable — the project owner sets in `owner-preferences.md` or just t
 - <e.g., "Supabase row count exceeded 80% of free tier — need to plan upgrade">
 
 **Trends:**
-- <e.g., "Monthly spend trending up 15%/week as Donna OS Routines start running">
+- <e.g., "Monthly spend trending up 15%/week as Agent Orchestration Engine Routines start running">
 
 **Recommended actions:**
 1. <e.g., "Defer non-critical preview deploys, save ~$8/mo">

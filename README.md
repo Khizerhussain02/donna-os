@@ -1,8 +1,8 @@
-# Donna OS
+# Agent Orchestration Engine
 
 **A manager-and-employees layer for Claude Code — one agent (Donna) that routes your request to a team of specialist agents, runs them in parallel, verifies their work, and hands you back a single answer.**
 
-Most AI coding setups are one assistant doing everything. Real teams don't work that way — they have a manager who knows *who* to ask, specialists who go deep, and someone who double-checks the work before it ships. Donna OS is that structure, expressed as [Claude Code subagents](https://docs.claude.com/en/docs/claude-code/sub-agents).
+Most AI coding setups are one assistant doing everything. Real teams don't work that way — they have a manager who knows *who* to ask, specialists who go deep, and someone who double-checks the work before it ships. Agent Orchestration Engine is that structure, expressed as [Claude Code subagents](https://docs.claude.com/en/docs/claude-code/sub-agents).
 
 You talk to **Donna**. Donna decides which **specialists** the question needs, dispatches them (in parallel when she can), and **synthesizes one coherent answer** — after a **verifier** has checked their claims for confabulation. You can add your own specialists by dropping in a file, and shape each one's behavior by editing a template.
 
@@ -69,8 +69,8 @@ Each specialist is a self-contained `.claude/agents/*.md` file (its role, tools,
 
 1. **Copy the framework into your project:**
    ```bash
-   git clone https://github.com/<you>/donna-os.git
-   cp -r donna-os/.claude/agents /your/project/.claude/agents
+   git clone https://github.com/<you>/agent-orchestration-engine.git
+   cp -r agent-orchestration-engine/.claude/agents /your/project/.claude/agents
    ```
 2. **Open your project in [Claude Code](https://claude.com/claude-code).**
 3. **Ask Donna something that needs more than one specialist**, e.g.:
@@ -100,11 +100,11 @@ Each specialist is a self-contained `.claude/agents/*.md` file (its role, tools,
 
 ## Inspiration & credit
 
-Donna OS is inspired by [**gstack**](https://github.com/garrytan/gstack) — [**Garry Tan**](https://github.com/garrytan)'s (President & CEO of Y Combinator) Claude Code skill pack, which put a beautifully simple idea into the world: stop using one AI as a solo developer, and give it a *role-based virtual team* instead.
+Agent Orchestration Engine is inspired by [**gstack**](https://github.com/garrytan/gstack) — [**Garry Tan**](https://github.com/garrytan)'s (President & CEO of Y Combinator) Claude Code skill pack, which put a beautifully simple idea into the world: stop using one AI as a solo developer, and give it a *role-based virtual team* instead.
 
-Donna OS takes that idea and builds an **orchestration layer** on top of it:
+Agent Orchestration Engine takes that idea and builds an **orchestration layer** on top of it:
 
-- Where gstack gives you a set of role *skills* you invoke, Donna OS adds a **manager agent (Donna)** that decides *which* specialists a question needs and **dispatches them as parallel sub-agents** across iterative rounds.
+- Where gstack gives you a set of role *skills* you invoke, Agent Orchestration Engine adds a **manager agent (Donna)** that decides *which* specialists a question needs and **dispatches them as parallel sub-agents** across iterative rounds.
 - It adds a **verifier** that checks each specialist's claims for confabulation before you see them, and a **synthesis** step that folds everything into one answer.
 - And it uses gstack's skills as the specialists' **power tools** — `senior-engineer`, `qa-lead`, `cso`, and others reach for gstack slash-commands to do their deep work.
 
@@ -112,7 +112,7 @@ So: the *"virtual team"* idea is Garry Tan's; the *manager-dispatches-specialist
 
 ## How we used it in production
 
-Donna OS wasn't a demo — it was a real validation gate for a real product. The pattern we ran, day in and day out:
+Agent Orchestration Engine wasn't a demo — it was a real validation gate for a real product. The pattern we ran, day in and day out:
 
 **After every push, Donna runs the full loop.** She dispatches the change to the specialists it actually needs — `senior-engineer` reviews the diff, `qa-lead` checks it genuinely works, `cso` looks for a security regression — they run **in parallel**, the `verifier` checks their claims for fabrication, and Donna comes back with **one green/red signal** before we trusted the change. A red from any specialist meant we looked again before moving on.
 
@@ -120,7 +120,7 @@ That's the whole point of the [read-only design](docs/ARCHITECTURE.md#7-safety-r
 
 ## Skills & credits
 
-Several specialists reach for **skills** — reusable procedures that live *outside* this repo and are installed globally in Claude Code. Donna OS **references** them by name; it does **not** bundle anyone else's code.
+Several specialists reach for **skills** — reusable procedures that live *outside* this repo and are installed globally in Claude Code. Agent Orchestration Engine **references** them by name; it does **not** bundle anyone else's code.
 
 - **[gstack](https://github.com/garrytan/gstack)** by Garry Tan — the skill pack Donna's team leans on most. `senior-engineer`, `qa-lead`, `cso`, `debugger`, `verifier`, and `performance-engineer` reach for gstack skills such as `/review`, `/qa`, `/cso`, `/investigate`, `/benchmark`, and `/canary`. **Install gstack for the specialists to reach full capability** — see [github.com/garrytan/gstack](https://github.com/garrytan/gstack).
 - **Official Anthropic skills** — a few agents use skills like `code-review`, `security-review`, and `document-generate` / `document-release`.

@@ -1,6 +1,6 @@
-# Donna OS — Architecture
+# Agent Orchestration Engine — Architecture
 
-Donna OS is a **multi-agent orchestration system** for Claude Code. You ask one agent — *Donna* — and she routes the work to a team of specialist agents, runs them in parallel across iterative rounds, checks their claims against the evidence, and returns a single synthesized answer.
+Agent Orchestration Engine is a **multi-agent system** for Claude Code. You ask one agent — *Donna* — and she routes the work to a team of specialist agents, runs them in parallel across iterative rounds, checks their claims against the evidence, and returns a single synthesized answer.
 
 This document describes the **full system** as it was built and run in production. This repository ships the part that works standalone today — **the interactive agent team** (the `.claude/agents/` role definitions). The **autonomous runtime**, the **observability data model**, and the **live console** described below are the fuller internal system; they're documented here because they're the real architecture, and they're on the [roadmap](../README.md#roadmap) for open-sourcing.
 
@@ -104,7 +104,7 @@ This is the part that separates "a demo" from "something that ran in production.
 
 ## 7. Safety: read-only by design
 
-Donna OS **observes, audits, and reports — it does not change your code.** The specialists read the codebase, run read-only checks, and hand findings back; Donna synthesizes them; **a human decides and acts.** There is no path by which a hallucinated finding silently edits your repo.
+Agent Orchestration Engine **observes, audits, and reports — it does not change your code.** The specialists read the codebase, run read-only checks, and hand findings back; Donna synthesizes them; **a human decides and acts.** There is no path by which a hallucinated finding silently edits your repo.
 
 This is a deliberate choice, not a shortcoming. A read-only advisory layer is:
 - **Safe to adopt** — you can point it at a production codebase on day one without risk.
