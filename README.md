@@ -44,6 +44,8 @@ You talk to **Donna**. Donna decides which **specialists** the question needs, d
 
 ---
 
+> 📐 **Want the full picture?** The [**Architecture deep-dive**](docs/ARCHITECTURE.md) covers the runtime loop, the anti-confabulation verification layer, the end-to-end observability model, and the reliability engineering (crash recovery, process-tree kills, budget caps, atomic job-claiming).
+
 ## The team (18 agents)
 
 **Donna** — the manager. The only agent that can dispatch others; routes, orchestrates, and synthesizes.
